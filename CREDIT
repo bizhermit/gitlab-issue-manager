@@ -1,0 +1,29 @@
++ @bizhermit/nexpress
+|   version: 1.0.3
+|   license: MIT
+|   licenseFile: \node_modules\@bizhermit\nexpress\LICENSE
+|   publisher: Senda Ryoichi
+|   email: rsenda@bizhermit.com
+|   url: https://bizhermit.com
+|   repository: https://github.com/bizhermit/nexpress.git
+|   + caniuse-lite
+|   |   version: 1.0.30001312
+|   |   license: CC-BY-4.0
+|   |   licenseFile: \node_modules\caniuse-lite\LICENSE
+|   |   publisher: Ben Briggs
+|   |   email: beneb.info@gmail.com
+|   |   url: http://beneb.info
+|   |   repository: browserslist/caniuse-lite
++ next
+|   version: 12.0.10
+|   license: MIT
+|   licenseFile: \node_modules\next\license.md
+|   repository: vercel/next.js
+|   + caniuse-lite
+|   |   version: 1.0.30001312
+|   |   license: CC-BY-4.0
+|   |   licenseFile: \node_modules\caniuse-lite\LICENSE
+|   |   publisher: Ben Briggs
+|   |   email: beneb.info@gmail.com
+|   |   url: http://beneb.info
+|   |   repository: browserslist/caniuse-lite

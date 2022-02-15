@@ -52,7 +52,7 @@ const IndexComponent: VFC = () => {
         try {
             const res = await fetchApi("deleteCache", params);
             msg.append(res.messages);
-            setParams({});
+            setParams({ url: params.url });
         } catch(err) {
             msg.error(err);
         }
