@@ -1,22 +1,101 @@
 {
   "name": "issue-manager",
+  "version": "0.0.0",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "ulr": ""
+  },
+  "bugs": "",
+  "author": "",
+  "contributors": [],
+  "license": "MIT",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "clean": "npx rimraf dist main src/.next src/out",
+    "license": "npx rimraf CREDIT && npx license -o CREDIT --returnError -exclude caniuse-lite",
+    "prestart": "npm run clean && npx tsc -p src-nexpress/tsconfig.json",
+    "server": "npm run prestart && node main/index.js -dev",
+    "start": "npm run license && npx tsc -p src/tsconfig.json && npx next build src && npx minifier main && npx minifier src/.next && node main/index.js",
+    "prebuild": "npm run clean && npx tsc -p src-nextron/tsconfig.json",
+    "electron": "npm run prebuild && npx electron main/src-nextron/index.js",
+    "build:next": "npx next build src && npx next export src",
+    "pack": "npm run prebuild && npx rimraf build && npm run build:next && npx minifier ./main && electron-builder --dir",
+    "pack:win": "npm run pack -- --win",
+    "confirm:win": "npm run pack:win && .\\build\\win-unpacked\\issue-manager.exe",
+    "confirm": "npm run confirm:win",
+    "build": "npm run license && npx rimraf build && npm run build:next && npx tsc -p src-nextron/tsconfig.json && npx minifier ./main && electron-builder",
+    "build:win": "npm run build -- --win"
   },
   "dependencies": {
+    "@bizhermit/basic-utils": "^1.1.4",
+    "@bizhermit/nexpress": "^1.0.3",
+    "@bizhermit/next-absorber": "^1.0.6",
+    "@bizhermit/nextron": "^1.1.4",
+    "@bizhermit/react-sdk": "^1.0.27",
     "next": "12.0.10",
     "react": "17.0.2",
     "react-dom": "17.0.2"
   },
   "devDependencies": {
-    "@types/node": "17.0.18",
+    "@bizhermit/license": "^1.0.10",
+    "@bizhermit/minifier": "^1.0.5",
+    "@types/node": "^17.0.18",
     "@types/react": "17.0.39",
+    "electron": "^17.0.1",
+    "electron-builder": "^22.14.13",
     "eslint": "8.9.0",
     "eslint-config-next": "12.0.10",
+    "rimraf": "^3.0.2",
     "typescript": "4.5.5"
+  },
+  "build": {
+    "appId": "example.issue-manager",
+    "productName": "issue-manager",
+    "asar": true,
+    "extends": null,
+    "extraMetadata": {
+      "main": "main/src-nextron/index.js"
+    },
+    "files": [
+      "main",
+      "src/out"
+    ],
+    "extraFiles": [
+      {
+        "from": "LICENSE",
+        "to": "LICENSE"
+      },
+      {
+        "from": "CREDIT",
+        "to": "CREDIT"
+      },
+      {
+        "from": "src/i18n.json",
+        "to": "resources/i18n.json"
+      }
+    ],
+    "directories": {
+      "output": "build"
+    },
+    "win": {
+      "icon": "src/public/favicon.ico",
+      "target": {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    },
+    "mac": {},
+    "linux": {},
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "browser": {
+    "fs": false,
+    "path": false
   }
 }
