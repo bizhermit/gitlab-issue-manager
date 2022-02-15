@@ -30,7 +30,7 @@ const HeaderComponent: VFC<{ title: string; }> = ({ title }) => {
             <div onClick={() => router.push("/dashboard")} style={{ cursor: "pointer" }}>
                 <Label style={{ fontSize: "2.0rem", marginRight: 20 }}>IssueManager</Label>
             </div>
-            <Label style={{ fontSize: "1.8rem", paddingTop: 7 }}>{title}</Label>
+            <Label style={{ fontSize: "1.8rem", paddingTop: 5 }}>{title}</Label>
             <Row fill right>
                 <Label style={{ marginRight: 5 }}>{git.user}</Label>
                 <Button image="signout" click={() => git.unset()}>Signout</Button>

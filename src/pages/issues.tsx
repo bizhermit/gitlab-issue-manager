@@ -9,6 +9,7 @@ import Row from "@bizhermit/react-sdk/dist/containers/row";
 import Button from "@bizhermit/react-sdk/dist/controls/button";
 import DateBox from "@bizhermit/react-sdk/dist/controls/datebox";
 import ListView, { ListViewColumnProps } from "@bizhermit/react-sdk/dist/controls/listview";
+import ListViewButtonColumn from "@bizhermit/react-sdk/dist/controls/listview-columns/button-column";
 import SelectBox, { SelectBoxController } from "@bizhermit/react-sdk/dist/controls/selectbox";
 import TextBox from "@bizhermit/react-sdk/dist/controls/textbox";
 import useMessage from "@bizhermit/react-sdk/dist/hooks/message";
@@ -42,7 +43,11 @@ const IssuesComponent: VFC = () => {
     const [filteredCount, setFilteredCount] = useState(0);
 
     const columns = useMemo(() => {
-        return [{
+        return [ListViewButtonColumn({
+            name: "detail",
+            iconImage: "menu",
+            disabled: true,
+        }), {
             name: "namespace",
             headerCellLabel: "Project",
             width: 320,
@@ -112,12 +117,12 @@ const IssuesComponent: VFC = () => {
                         <Caption label="Title" style={{ marginRight: 5 }}>
                             <TextBox name="title" bind={filterParams} style={{ width: 400 }}  />
                         </Caption>
+                    </Row>
+                    <Row fill>
                         <Caption label="Assignees" style={{ marginRight: 5 }}>
                             <TextBox name="assignees" bind={filterParams} style={{ width: 200 }}  />
                         </Caption>
-                    </Row>
-                    <Row fill>
-                        <Caption label="Due Date">
+                        <Caption label="Due Date" style={{ marginRight: 5 }}>
                             <DateBox name="dueDateFrom" bind={filterParams} />
                             <Label style={{ padding: "0px 5px" }}>～</Label>
                             <DateBox name="dueDateTo" bind={filterParams} />
@@ -147,7 +152,7 @@ const IssuesComponent: VFC = () => {
                                         return true;
                                     };
                                 });
-                            }}>Filter</Button>
+                            }}>Exec</Button>
                             <Button click={() => {
                                 setFilterParams({});
                             }}>Clear</Button>

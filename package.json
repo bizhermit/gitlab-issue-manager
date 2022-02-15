@@ -51,8 +51,8 @@
     "typescript": "4.5.5"
   },
   "build": {
-    "appId": "example.issue-manager",
-    "productName": "issue-manager",
+    "appId": "com.bizhermit.gitlab-issue-manager",
+    "productName": "gitlab-issue-manager",
     "asar": true,
     "extends": null,
     "extraMetadata": {

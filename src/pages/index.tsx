@@ -9,6 +9,7 @@ import useMessage from "@bizhermit/react-sdk/dist/hooks/message";
 import { useRouter } from "next/router";
 import Head from "next/head";
 import useGitAccount, { GitAccountProps } from "../contexts/git-account";
+import Row from "@bizhermit/react-sdk/dist/containers/row";
 
 const IndexPage: NextPage = () => {
     return (
@@ -47,9 +48,20 @@ const IndexComponent: VFC = () => {
         unlock();
     };
 
+    const deleteUserCache = async (unlock: VoidFunc) => {
+        try {
+            const res = await fetchApi("deleteCache", params);
+            msg.append(res.messages);
+            setParams({});
+        } catch(err) {
+            msg.error(err);
+        }
+        unlock();
+    };
+
     const load = async () => {
         try {
-            const res = await fetchApi("load-account");
+            const res = await fetchApi("loadAccount");
             msg.append(res.messages);
             if (res.hasError) return;
             setParams(res.data ?? {});
@@ -74,7 +86,14 @@ const IndexComponent: VFC = () => {
                 <Caption label="Access Token" labelWidth={120}>
                     <TextBox type="password" name="token" bind={params} style={{ width: 500 }} resize={false} />
                 </Caption>
-                <Button image="signin" click={signin}>Singin</Button>
+                <Row fill>
+                    <Row center>
+                        <Button image="signin" click={signin} style={{ marginLeft: 40 }}>Singin</Button>
+                    </Row>
+                    <Row right style={{ flex: "none" }}>
+                        <Button image="delete" click={deleteUserCache} title="delete user cache" />
+                    </Row>
+                </Row>
             </FlexBox>
         </FlexBox>
     );
