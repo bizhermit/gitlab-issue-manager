@@ -45,6 +45,8 @@ const IssuesComponent: VFC = () => {
         dueDateTo: string;
     }>>({});
     const [filteredCount, setFilteredCount] = useState(0);
+
+    const [projectId, setProjectId] = useState<number | undefined>(undefined);
     const [includeClosedIssue, setIncludeClosedIssue] = useState(false);
 
     const columns = useMemo(() => {
@@ -91,19 +93,30 @@ const IssuesComponent: VFC = () => {
         }] as Array<ListViewColumnProps>;
     }, []);
 
-    const load = async (unlock?: VoidFunc) => {
+    const loadProjects = async () => {
+        const originProjects = await fetchGit<Array<Struct>>(git, "projects?state=opened&per_page=100");
+        const map: {[key: string]: Struct} = {};
+        const items: Array<Struct> = [];
+        originProjects.forEach(project => {
+            if (project.id in map) return;
+            map[project.id] = project;
+            items.push({ value: project.id, label: `${project.namespace.full_path}/${project.name}` });
+        });
+        setProjects(items);
+    };
+    const loadIssues = async (unlock?: VoidFunc) => {
         try {
-            const originProjects = await fetchGit<Array<Struct>>(git, "projects?state=opened&per_page=100");
+            const projectIds = projectId == null ? projects.map(item => item.value as number).filter(item => item != null) : [projectId];
             const asyncItems: Array<Promise<void>> = [];
             const issues: Array<Struct> = [];
-            for (const originProject of originProjects) {
-                // console.log(originProject);
-                asyncItems.push((async (project: Struct) => {
-                    const originIssues = await fetchGit<Array<Struct>>(git, `projects/${project.id}/issues?${includeClosedIssue ? "" : "state=opened"}`);
+            for (const pid of projectIds) {
+                asyncItems.push((async (pid: number) => {
+                    const originProject = await fetchGit<Array<Struct>>(git, `projects/${pid}`);
+                    const originIssues = await fetchGit<Array<Struct>>(git, `projects/${pid}/issues?${includeClosedIssue ? "" : "state=opened"}`);
                     originIssues.forEach(originIssue => {
-                        issues.push(convertIssueData(project, originIssue));
+                        issues.push(convertIssueData(originProject, originIssue));
                     });
-                })(originProject));
+                })(pid));
             }
             await Promise.all(asyncItems);
             issues.sort((issue1, issue2) => {
@@ -120,31 +133,21 @@ const IssuesComponent: VFC = () => {
         unlock?.();
     };
 
-    useEffect(() => {
-        const map: {[key: string]: Struct} = {};
-        const items: Array<Struct> = [];
-        issues.forEach(issue => {
-            if (issue.project_id in map) return;
-            map[issue.project_id] = issue;
-            items.push({ value: issue.project_id, label: issue.namespace });
-        });
-        setProjects(items);
-    }, [issues]);
-
     const [filter, setFilter] = useState<(data: Struct) => boolean>(null);
 
     useEffect(() => {
-        load();
-    }, [includeClosedIssue]);
+        loadProjects();
+    }, []);
+
+    useEffect(() => {
+        if (projects.length > 0) loadIssues();
+    }, [projects, projectId, includeClosedIssue]);
 
     return (
         <FlexBox fitToOuter="fill" style={{ padding: 5 }}>
             <Row fill>
                 <AccordionContainer caption="Filter" fitToOuter="fx" defaultOpened={false}>
                     <Row fill>
-                        <Caption label="Project" style={{ marginRight: 5 }}>
-                            <SelectBox source={projects} style={{ width: 400 }} appendEmptyItem={true} name="projectId" bind={filterParams} />
-                        </Caption>
                         <Caption label="Title" style={{ marginRight: 5 }}>
                             <TextBox name="title" bind={filterParams} style={{ width: 400 }}  />
                         </Caption>
@@ -195,6 +198,11 @@ const IssuesComponent: VFC = () => {
                     </Row>
                 </AccordionContainer>
                 <Row fill>
+                    <Caption label="Project" style={{ marginRight: 5 }}>
+                        <SelectBox source={projects} style={{ width: 400 }} appendEmptyItem={true} changed={v => {
+                            setProjectId((v as Struct).value);
+                        }}/>
+                    </Caption>
                     <CheckBox changed={v => {
                         setIncludeClosedIssue(v);
                     }}>include closed issue</CheckBox>
@@ -203,7 +211,7 @@ const IssuesComponent: VFC = () => {
                         <Label style={{ padding: "0px 5px"}}>/</Label>
                         <Label>{NumberUtils.format(issues.length)}</Label>
                         <Label style={{ paddingLeft: "0px 5px" }}>件</Label>
-                        <Button image="reload" click={load}></Button>
+                        <Button image="reload" click={loadIssues}></Button>
                     </Row>
                 </Row>
             </Row>

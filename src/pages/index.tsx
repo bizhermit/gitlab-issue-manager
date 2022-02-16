@@ -56,7 +56,7 @@ const IndexComponent: VFC = () => {
                 unlock();
                 return;
             }
-            console.log(gitRes);
+            // console.log(gitRes);
             git.set({
                 ...inputParams,
                 name: gitRes.name,
