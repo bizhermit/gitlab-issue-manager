@@ -99,7 +99,7 @@ const IndexComponent: VFC = () => {
     return (
         <FlexBox fitToOuter="fill" center middle>
             <FlexBox center middle design className="cvx" style={{ padding: 10 }}>
-                <Caption label="Git API URL" labelWidth={120}>
+                <Caption label="GitLab URL" labelWidth={120}>
                     <TextBox name="url" bind={inputParams} style={{ width: 500 }} resize={false} />
                 </Caption>
                 <Caption label="User" labelWidth={120}>
