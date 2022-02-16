@@ -32,7 +32,7 @@ const HeaderComponent: VFC<{ title: string; }> = ({ title }) => {
             </div>
             <Label style={{ fontSize: "1.8rem", paddingTop: 5 }}>{title}</Label>
             <Row fill right>
-                <Label style={{ marginRight: 5 }}>{git.user}</Label>
+                <Label style={{ marginRight: 5 }}>{git.name}</Label>
                 <Button image="signout" click={() => git.unset()}>Signout</Button>
             </Row>
         </Row>

@@ -10,6 +10,9 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import useGitAccount, { GitAccountProps } from "../contexts/git-account";
 import Row from "@bizhermit/react-sdk/dist/containers/row";
+import fetchGit from "../modules/fetch-git";
+import StringUtils from "@bizhermit/basic-utils/dist/string-utils";
+import { MessageProps } from "@bizhermit/next-absorber/dist/message-context";
 
 const IndexPage: NextPage = () => {
     return (
@@ -25,23 +28,42 @@ const IndexPage: NextPage = () => {
 export default IndexPage;
 
 const IndexComponent: VFC = () => {
-    const [params, setParams] = useState<Partial<GitAccountProps>>({});
+    const [inputParams, setInputParams] = useState<GitAccountProps>({ url: "", username: "", token: "" });
     const msg = useMessage();
     const router = useRouter();
-    const gitAccCtx = useGitAccount();
+    const git = useGitAccount(true);
 
     const signin = async (unlock: VoidFunc) => {
         try {
-            const res = await fetchApi("signin", params);
+            const messages: Array<MessageProps> = [];
+            if (StringUtils.isEmpty(inputParams.url)) messages.push({ type: "err", title: "input GitLab access info", message: "Git API URL is empty"});
+            if (StringUtils.isEmpty(inputParams.username)) messages.push({ type: "err", title: "input GitLab access info", message: "User is empty"});
+            if (StringUtils.isEmpty(inputParams.token)) messages.push({ type: "err", title: "input GitLab access info", message: "Access Token is empty"});
+            if (messages.length > 0) {
+                msg.append(messages);
+                unlock();
+                return;
+            }
+            let gitRes = await fetchGit<Struct>(inputParams, `user`);
+            if (gitRes?.username !== inputParams.username) {
+                messages.push({ type: "err", title: "cannot signin" , message: "please confirm input parameters" });
+                unlock();
+                return messages;
+            }
+            const res = await fetchApi("signin", inputParams);
             msg.append(res.messages);
             if (res.hasError) {
                 unlock();
                 return;
             }
-            if (res.data.result) {
-                gitAccCtx.set(res.data.git);
-                router.push("/dashboard");
-            }
+            console.log(gitRes);
+            git.set({
+                ...inputParams,
+                name: gitRes.name,
+                userId: gitRes.id,
+                email: gitRes.email,
+            });
+            router.push("/dashboard");
         } catch(err) {
             msg.error(err);
         }
@@ -50,9 +72,9 @@ const IndexComponent: VFC = () => {
 
     const deleteUserCache = async (unlock: VoidFunc) => {
         try {
-            const res = await fetchApi("deleteCache", params);
+            const res = await fetchApi("deleteCache", inputParams);
             msg.append(res.messages);
-            setParams({ url: params.url });
+            setInputParams({ url: inputParams.url, username: "", token: "" });
         } catch(err) {
             msg.error(err);
         }
@@ -61,10 +83,10 @@ const IndexComponent: VFC = () => {
 
     const load = async () => {
         try {
-            const res = await fetchApi("loadAccount");
+            const res = await fetchApi<GitAccountProps>("loadAccount");
             msg.append(res.messages);
             if (res.hasError) return;
-            setParams(res.data ?? {});
+            setInputParams(res.data ?? { url: "", username: "", token: "" });
         } catch(err) {
             msg.error(err);
         }
@@ -78,13 +100,13 @@ const IndexComponent: VFC = () => {
         <FlexBox fitToOuter="fill" center middle>
             <FlexBox center middle design className="cvx" style={{ padding: 10 }}>
                 <Caption label="Git API URL" labelWidth={120}>
-                    <TextBox name="url" bind={params} style={{ width: 500 }} resize={false} />
+                    <TextBox name="url" bind={inputParams} style={{ width: 500 }} resize={false} />
                 </Caption>
                 <Caption label="User" labelWidth={120}>
-                    <TextBox name="user" bind={params} style={{ width: 500 }} resize={false} />
+                    <TextBox name="username" bind={inputParams} style={{ width: 500 }} resize={false} />
                 </Caption>
                 <Caption label="Access Token" labelWidth={120}>
-                    <TextBox type="password" name="token" bind={params} style={{ width: 500 }} resize={false} />
+                    <TextBox type="password" name="token" bind={inputParams} style={{ width: 500 }} resize={false} />
                 </Caption>
                 <Row fill>
                     <Row center>

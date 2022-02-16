@@ -10,7 +10,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
         const config = nextron.getConfig();
         ctx.clearSession("git");
         const gitAccount = config.gitAccount as GitAccountProps;
-        ctx.done({ url: config.gitApiUrl, user: gitAccount?.user, token: gitAccount?.token });
+        ctx.done({ url: config.gitApiUrl, username: gitAccount?.username, token: gitAccount?.token });
     } catch(err) {
         ctx.error(err);
     }

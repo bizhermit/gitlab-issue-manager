@@ -6,8 +6,12 @@
     "type": "git",
     "ulr": "https://github.com/bizhermit/gitlab-issue-manager.git"
   },
-  "bugs": "https://github.com/bizhermit/gitlab-issue-manager/issues",
-  "author": "Senda Ryoichi",
+  "bugs": {
+    "url": "https://github.com/bizhermit/gitlab-issue-manager/issues",
+    "email": "support@bizhermit.com"
+  },
+  "author": "Senda Ryoichi <rsenda@bizhermit.com> (https://bizhermit.com)",
+  "homepage": "https://bizhermit.com",
   "contributors": [],
   "license": "MIT",
   "private": true,
@@ -22,7 +26,7 @@
     "build:next": "npx next build src && npx next export src",
     "pack": "npm run prebuild && npx rimraf build && npm run build:next && npx minifier ./main && electron-builder --dir",
     "pack:win": "npm run pack -- --win",
-    "confirm:win": "npm run pack:win && .\\build\\win-unpacked\\issue-manager.exe",
+    "confirm:win": "npm run pack:win && .\\build\\win-unpacked\\gitlab-issue-manager.exe",
     "confirm": "npm run confirm:win",
     "build": "npm run license && npx rimraf build && npm run build:next && npx tsc -p src-nextron/tsconfig.json && npx minifier ./main && electron-builder",
     "build:win": "npm run build -- --win"
