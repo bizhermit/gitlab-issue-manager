@@ -11,18 +11,18 @@ import Button from "@bizhermit/react-sdk/dist/controls/button";
 import CheckBox from "@bizhermit/react-sdk/dist/controls/checkbox";
 import DateBox from "@bizhermit/react-sdk/dist/controls/datebox";
 import ListView, { ListViewColumnProps } from "@bizhermit/react-sdk/dist/controls/listview";
-import ListViewButtonColumn from "@bizhermit/react-sdk/dist/controls/listview-columns/button-column";
-import SelectBox, { SelectBoxController } from "@bizhermit/react-sdk/dist/controls/selectbox";
+import SelectBox from "@bizhermit/react-sdk/dist/controls/selectbox";
+import TextArea from "@bizhermit/react-sdk/dist/controls/textarea";
 import TextBox from "@bizhermit/react-sdk/dist/controls/textbox";
 import useMask, { MaskContainer } from "@bizhermit/react-sdk/dist/hooks/mask";
 import useMessage from "@bizhermit/react-sdk/dist/hooks/message";
-import { CssVar } from "@bizhermit/react-sdk/dist/layouts/style";
 import Label from "@bizhermit/react-sdk/dist/texts/label";
 import { NextPage } from "next";
 import { useEffect, useMemo, useState, VFC } from "react";
+import GitIssueFrame from "../components/git-issue-frame";
 import SignedinContainer from "../components/signedin-container";
 import useGitAccount from "../contexts/git-account";
-import fetchGit from "../modules/fetch-git";
+import { getGitProjects, getIssue, getIssues, getProject } from "../modules/fetch-git";
 
 const IssuesPage: NextPage = () => {
     return (
@@ -34,6 +34,7 @@ const IssuesPage: NextPage = () => {
                 key: "issue",
                 component: IssueComponent as any,
                 props: { projectId: null },
+                flexRate: 2,
             }]} />
         </SignedinContainer>
     );
@@ -74,7 +75,7 @@ const IssuesComponent: GradualContentFC = ({ gcc }) => {
         }, {
             name: "priority",
             headerCellLabel: "Priority",
-            width: 100,
+            width: 90,
             cellTextAlign: "center",
         }, {
             name: "status",
@@ -100,7 +101,7 @@ const IssuesComponent: GradualContentFC = ({ gcc }) => {
     }, [projectId]);
 
     const loadProjects = async () => {
-        const originProjects = await fetchGit<Array<Struct>>(git, "projects?state=opened&per_page=100");
+        const originProjects = await getGitProjects(git);
         const map: {[key: string]: Struct} = {};
         const items: Array<Struct> = [];
         originProjects.forEach(project => {
@@ -118,8 +119,8 @@ const IssuesComponent: GradualContentFC = ({ gcc }) => {
             const issues: Array<Struct> = [];
             for (const pid of projectIds) {
                 asyncItems.push((async (pid: number) => {
-                    const originProject = await fetchGit<Array<Struct>>(git, `projects/${pid}`);
-                    const originIssues = await fetchGit<Array<Struct>>(git, `projects/${pid}/issues?${includeClosedIssue ? "" : "state=opened"}`);
+                    const originProject = await getProject(git, pid);
+                    const originIssues = await getIssues(git, { projectId: pid, includeClosed: includeClosedIssue });
                     originIssues.forEach(originIssue => {
                         issues.push(convertIssueData(originProject, originIssue));
                     });
@@ -272,43 +273,5 @@ const convertIssueData = (project: Struct, issue: Struct) => {
 };
 
 const IssueComponent: GradualContentFC<{ projectId: number; issueId: number; }> = ({ projectId, issueId }) => {
-    const git = useGitAccount();
-    const msg = useMessage();
-    const mask = useMask();
-    const [issue, setIssue] = useState<Struct>();
-
-    const loadIssue = async (unlock?: VoidFunc) => {
-        if (projectId == null || issueId == null) {
-            setIssue(null);
-            return;
-        }
-        mask.show({ image: "spin-circle", text: "get issue..."});
-        try {
-            const issue = await fetchGit<Struct>(git, `projects/${projectId}/issues/${issueId}`);
-            console.log(issue);
-            setIssue(issue);
-        } catch(err) {
-            msg.error(err);
-        }
-        unlock?.();
-        mask.close();
-    };
-
-    useEffect(() => {
-        loadIssue();
-    }, [projectId, issueId]);
-
-    if (projectId == null || issueId == null) return <></>;
-    return (
-        <MaskContainer fitToOuter="fill" mask={mask}>
-            <FlexBox fitToOuter="fill" design>
-                <Row fill>
-                    <Label style={{ padding: "0px 10px", fontSize: "1.8rem", flex: 1 }}>#{issue.iid} {issue?.title}</Label>
-                    <Row right style={{ flex: "none" }}>
-                        <Button image="reload" click={loadIssue} />
-                    </Row>
-                </Row>
-            </FlexBox>
-        </MaskContainer>
-    );
+    return <GitIssueFrame projectId={projectId} issueId={issueId} />;
 };

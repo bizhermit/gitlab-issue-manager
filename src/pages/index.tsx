@@ -10,7 +10,7 @@ import { useRouter } from "next/router";
 import Head from "next/head";
 import useGitAccount, { GitAccountProps } from "../contexts/git-account";
 import Row from "@bizhermit/react-sdk/dist/containers/row";
-import fetchGit from "../modules/fetch-git";
+import { getGitUser } from "../modules/fetch-git";
 import StringUtils from "@bizhermit/basic-utils/dist/string-utils";
 import { MessageProps } from "@bizhermit/next-absorber/dist/message-context";
 
@@ -44,7 +44,7 @@ const IndexComponent: VFC = () => {
                 unlock();
                 return;
             }
-            let gitRes = await fetchGit<Struct>(inputParams, `user`);
+            let gitRes = await getGitUser(inputParams);
             if (gitRes?.username !== inputParams.username) {
                 messages.push({ type: "err", title: "cannot signin" , message: "please confirm input parameters" });
                 unlock();
