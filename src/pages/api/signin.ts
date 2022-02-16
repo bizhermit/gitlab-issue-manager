@@ -6,9 +6,10 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const ctx = new ApiContext(req, res);
     try {
         const { url, username, token } = ctx.getParams();
-        const nextron = nextronAccessor();
+        ctx.setSession("git", ctx.getParams());
         const gitAccount = { username, token };
-        nextron.saveConfig({ gitApiUrl: url, gitAccount });
+        const nextron = nextronAccessor();
+        nextron?.saveConfig({ gitApiUrl: url, gitAccount });
         ctx.done();
     } catch(err) {
         console.log(err);

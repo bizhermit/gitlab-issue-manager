@@ -16,16 +16,16 @@ const SwitchThemeComponent: VFC = () => {
 
     return (
         <>
-            <Caption label="配色" style={{ marginRight: 5 }}>
+            <Caption label="Color" style={{ marginRight: 5 }}>
                 <RadioButton defaultValue={layout.color} source={colorSource} changed={v => {
                     layout.setColor(v.value);
-                    nextron.setLayoutColor(v.value);
+                    nextron?.setLayoutColor(v.value);
                 }} direction={layout.screenSize === "s" ? "vertical" : "horizontal"} />
             </Caption>
-            <Caption label="デザイン">
+            <Caption label="Design">
                 <RadioButton defaultValue={layout.design} source={designSource} changed={v => {
                     layout.setDesign(v.value);
-                    nextron.setLayoutDesign(v.value);
+                    nextron?.setLayoutDesign(v.value);
                 }} direction={layout.screenSize === "s" ? "vertical" : "horizontal"} />
             </Caption>
         </>

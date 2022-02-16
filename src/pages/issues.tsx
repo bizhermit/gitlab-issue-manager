@@ -12,6 +12,7 @@ import ListView, { ListViewColumnProps } from "@bizhermit/react-sdk/dist/control
 import ListViewButtonColumn from "@bizhermit/react-sdk/dist/controls/listview-columns/button-column";
 import SelectBox, { SelectBoxController } from "@bizhermit/react-sdk/dist/controls/selectbox";
 import TextBox from "@bizhermit/react-sdk/dist/controls/textbox";
+import useMask from "@bizhermit/react-sdk/dist/hooks/mask";
 import useMessage from "@bizhermit/react-sdk/dist/hooks/message";
 import Label from "@bizhermit/react-sdk/dist/texts/label";
 import { NextPage } from "next";
@@ -48,11 +49,13 @@ const IssuesComponent: VFC = () => {
 
     const [projectId, setProjectId] = useState<number | undefined>(undefined);
     const [includeClosedIssue, setIncludeClosedIssue] = useState(false);
+    const mask = useMask();
 
     const columns = useMemo(() => {
         return [ListViewButtonColumn({
             name: "detail",
             iconImage: "menu",
+            fixed: true,
             clickedCell: (params) => {
                 console.log(params.data);
             },
@@ -63,7 +66,7 @@ const IssuesComponent: VFC = () => {
         }, {
             name: "title",
             headerCellLabel: "Title",
-            width: 500,
+            fixed: true,
             fill: true,
         }, {
             name: "priority",
@@ -105,6 +108,7 @@ const IssuesComponent: VFC = () => {
         setProjects(items);
     };
     const loadIssues = async (unlock?: VoidFunc) => {
+        mask.show({ image: "spin-circle", text: "get issues..." });
         try {
             const projectIds = projectId == null ? projects.map(item => item.value as number).filter(item => item != null) : [projectId];
             const asyncItems: Array<Promise<void>> = [];
@@ -131,6 +135,7 @@ const IssuesComponent: VFC = () => {
             msg.error(err);
         }
         unlock?.();
+        mask.close();
     };
 
     const [filter, setFilter] = useState<(data: Struct) => boolean>(null);
@@ -149,12 +154,10 @@ const IssuesComponent: VFC = () => {
                 <AccordionContainer caption="Filter" fitToOuter="fx" defaultOpened={false}>
                     <Row fill>
                         <Caption label="Title" style={{ marginRight: 5 }}>
-                            <TextBox name="title" bind={filterParams} style={{ width: 400 }}  />
+                            <TextBox name="title" bind={filterParams} style={{ width: 300 }}  />
                         </Caption>
-                    </Row>
-                    <Row fill>
                         <Caption label="Assignees" style={{ marginRight: 5 }}>
-                            <TextBox name="assignees" bind={filterParams} style={{ width: 200 }}  />
+                            <TextBox name="assignees" bind={filterParams} style={{ width: 180 }}  />
                             <CheckBox name="assignees_self" bind={filterParams}>Self</CheckBox>
                         </Caption>
                         <Caption label="Due Date" style={{ marginRight: 5 }}>
@@ -162,7 +165,7 @@ const IssuesComponent: VFC = () => {
                             <Label style={{ padding: "0px 5px" }}>～</Label>
                             <DateBox name="dueDateTo" bind={filterParams} />
                         </Caption>
-                        <Row fill right>
+                        <Row fill right nowrap>
                             <Button click={() => {
                                 setFilter(() => {
                                     return (data: Struct) => {
@@ -206,7 +209,7 @@ const IssuesComponent: VFC = () => {
                     <CheckBox changed={v => {
                         setIncludeClosedIssue(v);
                     }}>include closed issue</CheckBox>
-                    <Row fill right>
+                    <Row fill right nowrap>
                         <Label>{NumberUtils.format(filteredCount)}</Label>
                         <Label style={{ padding: "0px 5px"}}>/</Label>
                         <Label>{NumberUtils.format(issues.length)}</Label>

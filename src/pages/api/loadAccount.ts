@@ -6,9 +6,13 @@ import { GitAccountProps } from "../../contexts/git-account";
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const ctx = new ApiContext(req, res);
     try {
-        const nextron = nextronAccessor();
-        const config = nextron.getConfig();
         ctx.clearSession("git");
+        const nextron = nextronAccessor();
+        const config = nextron?.getConfig();
+        if (config == null) {
+            ctx.done();
+            return;
+        }
         const gitAccount = config.gitAccount as GitAccountProps;
         ctx.done({ url: config.gitApiUrl, username: gitAccount?.username, token: gitAccount?.token });
     } catch(err) {
