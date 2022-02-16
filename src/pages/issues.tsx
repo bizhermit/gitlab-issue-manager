@@ -4,45 +4,42 @@ import StringUtils from "@bizhermit/basic-utils/dist/string-utils";
 import AccordionContainer from "@bizhermit/react-sdk/dist/containers/accordion-container";
 import Caption from "@bizhermit/react-sdk/dist/containers/caption";
 import FlexBox from "@bizhermit/react-sdk/dist/containers/flexbox";
-import GradualContainer from "@bizhermit/react-sdk/dist/containers/gradual-container";
-import { GradualContentFC } from "@bizhermit/react-sdk/dist/containers/gradual-container";
 import Row from "@bizhermit/react-sdk/dist/containers/row";
+import SplitContainer from "@bizhermit/react-sdk/dist/containers/split-container";
+import { SplitContentFC } from "@bizhermit/react-sdk/dist/containers/split-container";
 import Button from "@bizhermit/react-sdk/dist/controls/button";
 import CheckBox from "@bizhermit/react-sdk/dist/controls/checkbox";
 import DateBox from "@bizhermit/react-sdk/dist/controls/datebox";
 import ListView, { ListViewColumnProps } from "@bizhermit/react-sdk/dist/controls/listview";
 import SelectBox from "@bizhermit/react-sdk/dist/controls/selectbox";
-import TextArea from "@bizhermit/react-sdk/dist/controls/textarea";
 import TextBox from "@bizhermit/react-sdk/dist/controls/textbox";
-import useMask, { MaskContainer } from "@bizhermit/react-sdk/dist/hooks/mask";
+import useMask from "@bizhermit/react-sdk/dist/hooks/mask";
 import useMessage from "@bizhermit/react-sdk/dist/hooks/message";
 import Label from "@bizhermit/react-sdk/dist/texts/label";
 import { NextPage } from "next";
-import { useEffect, useMemo, useState, VFC } from "react";
-import GitIssueFrame from "../components/git-issue-frame";
+import { useEffect, useMemo, useState } from "react";
 import SignedinContainer from "../components/signedin-container";
 import useGitAccount from "../contexts/git-account";
 import { getGitProjects, getIssue, getIssues, getProject } from "../modules/fetch-git";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const IssuesPage: NextPage = () => {
     return (
         <SignedinContainer title="Issues">
-            <GradualContainer fitToOuter="fill" contents={[{
-                key: "issues",
+            <SplitContainer fitToOuter="fill" content1={{
                 component: IssuesComponent,
-            }, {
-                key: "issue",
+            }} content2={{
                 component: IssueComponent as any,
-                props: { projectId: null },
-                flexRate: 2,
-            }]} />
+                visible: false,
+            }} />
         </SignedinContainer>
     );
 };
 
 export default IssuesPage;
 
-const IssuesComponent: GradualContentFC = ({ gcc }) => {
+const IssuesComponent: SplitContentFC = ({ scc }) => {
     const git = useGitAccount();
     const [issues, setIssues] = useState([]);
     const [projects, setProjects] = useState([]);
@@ -101,15 +98,21 @@ const IssuesComponent: GradualContentFC = ({ gcc }) => {
     }, [projectId]);
 
     const loadProjects = async () => {
-        const originProjects = await getGitProjects(git);
-        const map: {[key: string]: Struct} = {};
-        const items: Array<Struct> = [];
-        originProjects.forEach(project => {
-            if (project.id in map) return;
-            map[project.id] = project;
-            items.push({ value: project.id, label: `${project.namespace.full_path}/${project.name}` });
-        });
-        setProjects(items);
+        mask.show({ image: "spin-circle", text: "get projects..." });
+        try {
+            const originProjects = await getGitProjects(git);
+            const map: {[key: string]: Struct} = {};
+            const items: Array<Struct> = [];
+            originProjects.forEach(project => {
+                if (project.id in map) return;
+                map[project.id] = project;
+                items.push({ value: project.id, label: `${project.namespace.full_path}/${project.name}` });
+            });
+            setProjects(items);
+        } catch(err) {
+            msg.error(err);
+        }
+        mask.close();
     };
     const loadIssues = async (unlock?: VoidFunc) => {
         mask.show({ image: "spin-circle", text: "get issues..." });
@@ -229,8 +232,7 @@ const IssuesComponent: GradualContentFC = ({ gcc }) => {
                     setFilteredCount(items.length);
                 },
                 clickedRow: (params) => {
-                    console.log(params.data);
-                    gcc.showNext({
+                    scc.setVisible({ partner: true }).call({
                         projectId: params.data.projectId,
                         issueId: params.data.issueId
                     });
@@ -272,6 +274,51 @@ const convertIssueData = (project: Struct, issue: Struct) => {
     };
 };
 
-const IssueComponent: GradualContentFC<{ projectId: number; issueId: number; }> = ({ projectId, issueId }) => {
-    return <GitIssueFrame projectId={projectId} issueId={issueId} />;
+const IssueComponent: SplitContentFC = ({ scc, ma }) => {
+    const git = useGitAccount();
+    const msg = useMessage();
+    const mask = useMask({ accessor: ma});
+    const [project, setProject] = useState<Struct>();
+    const [issue, setIssue] = useState<Struct>();
+
+    const load = async (projectId: number, issueId: number) => {
+        if (projectId == null || issueId == null) {
+            setProject(null);
+            setIssue(null);
+            return;
+        }
+        mask.show({ image: "spin-circle", text: "get project..."});
+        try {
+            const project = await getProject(git, projectId);
+            mask.show({ image: "spin-circle", text: "get issue..." });
+            const issue = await getIssue(git, projectId, issueId);
+            setProject(project);
+            setIssue(issue);
+            console.log(project);
+            console.log(issue);
+        } catch(err) {
+            msg.error(err);
+        }
+        mask.close();
+    };
+
+    useEffect(() => {
+        scc.setCalled((params) => {
+            load(params.projectId, params.issueId);
+        });
+    }, []);
+
+    if (project == null || issue == null) return <></>;
+    return (
+        <FlexBox fitToOuter="fill" design style={{ padding: 5 }}>
+            <FlexBox design fitToOuter="fx" className="cvx" row style={{ padding: 5, fontSize: "1.8rem" }}>
+                <Label>#{issue?.iid}</Label><Label style={{ marginLeft: 10 }}>{issue?.title}</Label>
+            </FlexBox>
+            {issue == null ? <></> : <>
+                <FlexBox fitToOuter="fx" style={{ whiteSpace: "pre-wrap", padding: 5 }} scroll>
+                    <ReactMarkdown children={issue?.description ?? ""} remarkPlugins={[remarkGfm]} />
+                </FlexBox>
+            </>}
+        </FlexBox>
+    );
 };
