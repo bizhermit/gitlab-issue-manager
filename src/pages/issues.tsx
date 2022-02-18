@@ -30,13 +30,12 @@ const IssuesPage: NextPage = () => {
             <SplitContainer fitToOuter="fill" content1={{
                 component: IssuesComponent,
             }} content2={{
-                component: IssueComponent as any,
+                component: IssueComponent,
                 visible: false,
             }} />
         </SignedinContainer>
     );
 };
-
 export default IssuesPage;
 
 const IssuesComponent: SplitContentFC = ({ scc }) => {
